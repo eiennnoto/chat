@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チャット</title>
+  <style>body {
+  background-color: #e1f5fe; /* 水色の背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#chat-container {
+  width: 90%;
+  max-width: 600px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+}
+
+#chat-window {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  border-bottom: 1px solid #ddd;
+}
+
+.message {
+  padding: 5px 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  max-width: 80%;
+  word-wrap: break-word; /* メッセージが枠を超えた場合に折り返す */
+}
+
+.message.self {
+  background-color: #dcf8c6; /* 自分のメッセージの色 */
+  align-self: flex-end;
+}
+
+.message.other {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  align-self: flex-start;
+}
+
+#message-form {
+  display: flex;
+  border-top: 1px solid #ddd;
+  padding: 10px;
+  background-color: #fff;
+}
+
+#message {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+#send {
+  background-color: #0b93f6;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+#send:hover {
+  background-color: #007bbd;
+}
+
+#join-room-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input[type="text"] {
+  padding: 10px;
+  margin: 5px 0;
+  width: 80%;
+  max-width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+input[type="file"] {
+  margin: 10px 0;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+  background-color: #0b93f6;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #007bbd;
+}
+
+img {
+  max-width: 100px; /* 小さく表示 */
+  height: auto;
+  margin-top: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* モーダルのスタイル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}</style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="join-room-container">
+      <input type="text" id="username" placeholder="ニックネームを入力">
+      <input type="text" id="room-name" placeholder="ルーム名を入力">
+      <button id="join-room">入室</button>
+    </div>
+    <div id="chat-window" style="display: none;">
+      <div id="output"></div>
+    </div>
+    <div id="message-form" style="display: none;">
+      <input type="text" id="message" placeholder="メッセージを入力">
+      <input type="file" id="image-upload" accept="image/*">
+      <button id="send">送信</button>
+    </div>
+  </div>
+
+  <!-- モーダルウィンドウの追加 -->
+  <div id="image-modal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modal-image">
+  </div>
+
+  <script type="text/javascript">const socket = new WebSocket('wss://northern-south-shingle.glitch.me'); // GlitchプロジェクトのURLに置き換える
+
+const roomNameInput = document.getElementById('room-name');
+const joinRoomButton = document.getElementById('join-room');
+const chatWindow = document.getElementById('chat-window');
+const message = document.getElementById('message');
+const username = document.getElementById('username');
+const sendButton = document.getElementById('send');
+const output = document.getElementById('output');
+const messageForm = document.getElementById('message-form');
+const imageUpload = document.getElementById('image-upload');
+const imageModal = document.getElementById('image-modal');
+const modalImage = document.getElementById('modal-image');
+const closeModal = document.getElementsByClassName('close')[0];
+
+let currentRoom = '';
+let currentUser = '';
+
+// 接続が開かれたとき
+socket.onopen = () => {
+  console.log('Connected to server');
+};
+
+// メッセージを受信したとき
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.room === currentRoom) {
+    displayMessage(data);
+  }
+};
+
+// エラーが発生したとき
+socket.onerror = (error) => {
+  console.error('WebSocket Error: ', error);
+};
+
+// 接続が閉じられたとき
+socket.onclose = () => {
+  console.log('Disconnected from server');
+};
+
+joinRoomButton.addEventListener('click', () => {
+  const roomName = roomNameInput.value.trim();
+  const userName = username.value.trim();
+  if (roomName && userName) {
+    currentRoom = roomName;
+    currentUser = userName;
+    roomNameInput.style.display = 'none';
+    username.style.display = 'none';
+    joinRoomButton.style.display = 'none';
+    chatWindow.style.display = 'block';
+    messageForm.style.display = 'flex';
+    const joinMsg = {
+      user: currentUser,
+      message: `${currentUser}が入室しました`,
+      room: currentRoom,
+      type: 'notification'
+    };
+    socket.send(JSON.stringify(joinMsg));
+  } else {
+    alert('ニックネームとルーム名を入力してください');
+  }
+});
+
+function sendMessage() {
+  if (message.value === '' && imageUpload.files.length === 0) {
+    alert('メッセージまたは画像を入力してください');
+    return;
+  }
+  
+  const msg = {
+    user: currentUser,
+    message: message.value,
+    room: currentRoom,
+    type: 'message'
+  };
+
+  if (imageUpload.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      msg.image = event.target.result;
+      socket.send(JSON.stringify(msg));
+    };
+    reader.readAsDataURL(imageUpload.files[0]);
+  } else {
+    socket.send(JSON.stringify(msg));
+  }
+  
+  message.value = '';
+  imageUpload.value = '';
+}
+
+sendButton.addEventListener('click', sendMessage);
+
+message.addEventListener('keypress', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault(); // デフォルトの送信動作をキャンセル
+    sendMessage();
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (currentRoom && currentUser) {
+    const leaveMsg = {
+      user: currentUser,
+      message: `${currentUser}が退出しました`,
+      room: currentRoom,
+      type: 'notification'
+    };
+    socket.send(JSON.stringify(leaveMsg));
+  }
+});
+
+function displayMessage(data) {
+  const msgElement = document.createElement('div');
+  msgElement.classList.add('message');
+  if (data.user === currentUser) {
+    msgElement.classList.add('self');
+  } else if (data.type === 'notification') {
+    msgElement.classList.add('notification');
+  } else {
+    msgElement.classList.add('other');
+  }
+  
+  if (data.image) {
+    const imgElement = document.createElement('img');
+    imgElement.src = data.image;
+    imgElement.addEventListener('click', () => {
+      modalImage.src = data.image;
+      imageModal.style.display = 'block';
+    });
+    msgElement.appendChild(imgElement);
+  } else {
+    msgElement.textContent = `${data.user}: ${data.message}`;
+  }
+  
+  output.appendChild(msgElement);
+  chatWindow.scrollTop = chatWindow.scrollHeight; // 新しいメッセージが来たら自動スクロール
+}
+
+// モーダルの閉じる動作
+closeModal.onclick = () => {
+  imageModal.style.display = 'none';
+};
+
+// モーダル外をクリックしたら閉じる
+window.onclick = (event) => {
+  if (event.target === imageModal) {
+    imageModal.style.display = 'none';
+  }
+};</script>
+</body>
+</html>
