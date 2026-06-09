@@ -27,6 +27,12 @@ io.on("connection", (socket) => {
         io.emit("chat message", msg);
     });
 
+    socket.on("chat image", (data) => {
+
+    io.emit("chat image", data);
+
+});
+
 });
 
 const PORT = process.env.PORT || 3000;
