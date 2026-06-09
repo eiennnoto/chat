@@ -127,22 +127,6 @@ document.getElementById("message").addEventListener("keypress", (e)=>{
         sendMessage();
     }
 });
-
-document.getElementById("imageInput")
-.addEventListener("change", function() {
-
-    const file = this.files[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        socket.emit("chat image", e.target.result);
-    };
-
-    reader.readAsDataURL(file);
-});
 </script>
 
 </body>
