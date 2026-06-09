@@ -82,6 +82,13 @@ function addMessage(msg) {
     if (text.includes("data:image/")) {
 
         const start = text.indexOf("data:image/");
+        const sender = text.substring(0, start).trim();
+
+        if (sender) {
+            const label = document.createElement("div");
+            label.textContent = sender;
+            div.appendChild(label);
+        }
 
         const img = document.createElement("img");
         img.src = text.substring(start);
@@ -90,8 +97,8 @@ function addMessage(msg) {
         img.style.maxHeight = "300px";
 
         div.appendChild(img);
-
     }
+
     // http:// や https:// の場合
     else if (text.includes("http://") || text.includes("https://")) {
 
@@ -99,8 +106,11 @@ function addMessage(msg) {
 
         if (match) {
 
+            const url = match[0];
+            const sender = text.substring(0, text.indexOf(url)).trim();
+
             const img = document.createElement("img");
-            img.src = match[0];
+            img.src = url;
 
             img.style.maxWidth = "300px";
             img.style.maxHeight = "300px";
@@ -109,8 +119,12 @@ function addMessage(msg) {
                 div.textContent = text;
             };
 
-            div.textContent = text;
-            div.appendChild(document.createElement("br"));
+            if (sender) {
+                const label = document.createElement("div");
+                label.textContent = sender;
+                div.appendChild(label);
+            }
+
             div.appendChild(img);
 
         } else {
@@ -118,8 +132,9 @@ function addMessage(msg) {
             div.textContent = text;
 
         }
-
     }
+
+    // 普通のメッセージ
     else {
 
         div.textContent = text;
@@ -129,7 +144,7 @@ function addMessage(msg) {
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
 }
-
+    
 function sendMessage(){
     const name = document.getElementById("name").value || "匿名";
     const message = document.getElementById("message").value;
