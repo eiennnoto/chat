@@ -73,13 +73,35 @@ socket.on("chat message", (msg) => {
 
 
 function addMessage(msg) {
+
     const div = document.createElement("div");
     div.className = "message";
-    div.textContent = msg;
+
+    if (
+        typeof msg === "string" &&
+        (msg.startsWith("http://") || msg.startsWith("https://"))
+    ) {
+
+        const img = document.createElement("img");
+        img.src = msg;
+        img.style.maxWidth = "300px";
+        img.style.maxHeight = "300px";
+
+        img.onerror = () => {
+            div.textContent = msg;
+        };
+
+        div.appendChild(img);
+
+    } else {
+
+        div.textContent = msg;
+
+    }
 
     messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
 }
-
 function sendMessage(){
     const name = document.getElementById("name").value || "匿名";
     const message = document.getElementById("message").value;
