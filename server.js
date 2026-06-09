@@ -8,16 +8,25 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
+const messages = [];
+
 io.on("connection", (socket) => {
-    console.log("ユーザー接続");
+
+    // 接続時に履歴を送信
+    socket.emit("chat history", messages);
 
     socket.on("chat message", (msg) => {
+
+        messages.push(msg);
+
+        // 100件を超えたら古いものを削除
+        if (messages.length > 100) {
+            messages.shift();
+        }
+
         io.emit("chat message", msg);
     });
 
-    socket.on("disconnect", () => {
-        console.log("ユーザー切断");
-    });
 });
 
 const PORT = process.env.PORT || 3000;
