@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チャットサイト</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    max-width:800px;
+    margin:auto;
+    padding:20px;
+}
+
+#messages{
+    border:1px solid #ccc;
+    height:400px;
+    overflow-y:auto;
+    padding:10px;
+    margin-bottom:10px;
+}
+
+.message{
+    margin:5px 0;
+    padding:5px;
+    background:#f2f2f2;
+    border-radius:5px;
+}
+
+input{
+    padding:10px;
+}
+
+#name{
+    width:20%;
+}
+
+#message{
+    width:55%;
+}
+
+button{
+    padding:10px;
+}
+</style>
+</head>
+<body>
+
+<h1>チャットサイト</h1>
+
+<div id="messages"></div>
+
+<input id="name" placeholder="名前">
+<input id="message" placeholder="メッセージ">
+<button onclick="sendMessage()">送信</button>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+const messages = document.getElementById("messages");
+
+socket.on("chat message", (msg) => {
+    const div = document.createElement("div");
+    div.className = "message";
+    div.textContent = msg;
+
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+});
+
+function sendMessage(){
+    const name = document.getElementById("name").value || "匿名";
+    const message = document.getElementById("message").value;
+
+    if(!message) return;
+
+    socket.emit("chat message", `${name}: ${message}`);
+    document.getElementById("message").value = "";
+}
+
+document.getElementById("message").addEventListener("keypress", (e)=>{
+    if(e.key === "Enter"){
+        sendMessage();
+    }
+});
+</script>
+
+</body>
+</html>
