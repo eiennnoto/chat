@@ -76,23 +76,53 @@ function addMessage(msg) {
     const div = document.createElement("div");
     div.className = "message";
 
-    const imageUrlMatch =
-        msg.match(/https?:\/\/\S+/);
+    const text = String(msg);
 
-    if (imageUrlMatch) {
+    // data:image/... の場合
+    if (text.includes("data:image/")) {
+
+        const start = text.indexOf("data:image/");
 
         const img = document.createElement("img");
-        img.src = imageUrlMatch[0];
+        img.src = text.substring(start);
+
         img.style.maxWidth = "300px";
         img.style.maxHeight = "300px";
 
-        div.textContent = msg;
-        div.appendChild(document.createElement("br"));
         div.appendChild(img);
 
-    } else {
+    }
+    // http:// や https:// の場合
+    else if (text.includes("http://") || text.includes("https://")) {
 
-        div.textContent = msg;
+        const match = text.match(/https?:\/\/\S+/);
+
+        if (match) {
+
+            const img = document.createElement("img");
+            img.src = match[0];
+
+            img.style.maxWidth = "300px";
+            img.style.maxHeight = "300px";
+
+            img.onerror = () => {
+                div.textContent = text;
+            };
+
+            div.textContent = text;
+            div.appendChild(document.createElement("br"));
+            div.appendChild(img);
+
+        } else {
+
+            div.textContent = text;
+
+        }
+
+    }
+    else {
+
+        div.textContent = text;
 
     }
 
