@@ -61,14 +61,24 @@ button{
 const socket = io();
 const messages = document.getElementById("messages");
 
+socket.on("chat history", (history) => {
+    history.forEach(msg => {
+        addMessage(msg);
+    });
+});
+
 socket.on("chat message", (msg) => {
+    addMessage(msg);
+});
+
+function addMessage(msg) {
     const div = document.createElement("div");
     div.className = "message";
     div.textContent = msg;
 
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
-});
+}
 
 function sendMessage(){
     const name = document.getElementById("name").value || "匿名";
