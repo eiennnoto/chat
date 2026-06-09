@@ -90,26 +90,11 @@ socket.on("chat image", (data) => {
 });
 
 function addMessage(msg) {
-
     const div = document.createElement("div");
     div.className = "message";
-
-    if (
-        typeof msg === "string" &&
-        msg.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp)$/i)
-    ) {
-
-        div.innerHTML =
-        `<img src="${msg}" style="max-width:300px;max-height:300px;">`;
-
-    } else {
-
-        div.textContent = msg;
-
-    }
+    div.textContent = msg;
 
     messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
 }
 
 function sendMessage(){
