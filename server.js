@@ -50,6 +50,10 @@ io.on("connection", (socket) => {
     callback(true);
 });
 
+    socket.on("disconnect", () => {
+    users.delete(socket.id);
+});
+
 });
 
 const PORT = process.env.PORT || 3000;
