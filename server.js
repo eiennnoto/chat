@@ -29,6 +29,27 @@ io.on("connection", (socket) => {
         io.emit("chat message", msg);
     });
 
+    socket.on("change name", (newName, callback) => {
+
+    newName = newName.trim();
+
+    if (!newName) {
+        callback(false, "名前を入力してください");
+        return;
+    }
+
+    const used = [...users.values()].includes(newName);
+
+    if (used && users.get(socket.id) !== newName) {
+        callback(false, "その名前は使用中です");
+        return;
+    }
+
+    users.set(socket.id, newName);
+
+    callback(true);
+});
+
 });
 
 const PORT = process.env.PORT || 3000;
