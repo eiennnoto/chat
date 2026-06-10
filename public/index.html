@@ -146,20 +146,30 @@ function addMessage(msg) {
 }
     
 function sendMessage(){
-    const name = document.getElementById("name").value || "匿名";
-    const message = document.getElementById("message").value;
+
+    const name =
+        document.getElementById("name").value.trim();
+
+    const message =
+        document.getElementById("message").value;
 
     if(!message) return;
 
-    socket.emit("chat message", `${name}: ${message}`);
-    document.getElementById("message").value = "";
-}
+    socket.emit("change name", name, (success, reason) => {
 
-document.getElementById("message").addEventListener("keypress", (e)=>{
-    if(e.key === "Enter"){
-        sendMessage();
-    }
-});
+        if (!success) {
+            alert(reason);
+            return;
+        }
+
+        socket.emit(
+            "chat message",
+            `${name}: ${message}`
+        );
+
+        document.getElementById("message").value = "";
+    });
+}
 </script>
 
 </body>
