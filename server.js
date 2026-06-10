@@ -29,6 +29,20 @@ io.on("connection", (socket) => {
         io.emit("chat message", msg);
     });
 
+    socket.on("set name", (name, callback) => {
+
+    const exists = [...users.values()].includes(name);
+
+    if (exists) {
+        callback(false);
+        return;
+    }
+
+    users.set(socket.id, name);
+    callback(true);
+
+});
+
 });
 
 const PORT = process.env.PORT || 3000;
