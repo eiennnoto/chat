@@ -162,10 +162,17 @@ function sendMessage(){
             return;
         }
 
-        socket.emit(
-            "chat message",
-            `${name}: ${message}`
-        );
+const now = new Date();
+
+const time =
+    String(now.getHours()).padStart(2, "0") +
+    ":" +
+    String(now.getMinutes()).padStart(2, "0");
+
+socket.emit(
+    "chat message",
+    `[${time}] ${name}: ${message}`
+);
 
         document.getElementById("message").value = "";
     });
