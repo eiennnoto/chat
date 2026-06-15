@@ -2,6 +2,8 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
+let onlineCount = 0;
+
 const users = new Map();
 
 const app = express();
