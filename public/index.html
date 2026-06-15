@@ -71,6 +71,13 @@ socket.on("chat history", (history) => {
     });
 });
 
+    socket.on("online count", (count) => {
+
+    document.getElementById("onlineCount")
+        .textContent = `オンライン: ${count}人`;
+
+});
+
 socket.on("chat message", (msg) => {
     addMessage(msg);
 });
