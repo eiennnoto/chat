@@ -57,6 +57,10 @@ io.emit("online count", onlineCount);
 });
 
     socket.on("disconnect", () => {
+        onlineCount--;
+
+io.emit("online count", onlineCount);
+        
     users.delete(socket.id);
 });
 
