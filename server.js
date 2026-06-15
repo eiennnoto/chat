@@ -16,6 +16,10 @@ const messages = [];
 
 io.on("connection", (socket) => {
 
+    onlineCount++;
+
+io.emit("online count", onlineCount);
+
     // 接続時に履歴を送信
     socket.emit("chat history", messages);
 
